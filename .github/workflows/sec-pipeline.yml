@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   sast-and-linting:
     runs-on: ubuntu-latest
@@ -26,17 +29,13 @@ jobs:
 
       - name: Linting with Flake8 (Qualité du code)
         run: |
-          # Arrête le build s'il y a des erreurs de syntaxe Python
           flake8 backend/app --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Avertissements généraux (ne bloque pas le build)
           flake8 backend/app --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       - name: SAST with Bandit (Analyse de code statique)
         run: |
-          # Cherche des failles de sécurité dans le code Python (mots de passe en dur, failles SQLi...)
           bandit -r backend/app -c "bandit.yml" || true
 
       - name: SCA with pip-audit (Vérification des dépendances)
         run: |
-          # Vérifie si FastAPI ou uvicorn ont des failles connues (CVE)
           pip-audit -r backend/requirements.txt
