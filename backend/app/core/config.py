@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     POSTGRES_SERVER: str
     POSTGRES_PORT: str
     POSTGRES_DB: str
+    POOL_CODE: str
     
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from app.core.config import settings
+from app.api.v1.endpoints import auth
 
 # Imports pour le Rate Limiting
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -21,6 +22,8 @@ app = FastAPI(
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+# Inclusion des routes
+app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["Authentication"])
 
 @app.get("/", tags=["System"])
 @limiter.limit("5/minute") # Limite : 5 requêtes par minute sur cette route
