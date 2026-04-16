@@ -1,0 +1,39 @@
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from app.core.config import settings
+
+# Imports pour le Rate Limiting
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+# 1. Configuration du Limiter (basé sur l'IP du visiteur)
+limiter = Limiter(key_func=get_remote_address)
+
+# Iswagger cacher en production
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json" if settings.ENVIRONMENT != "production" else None,
+    docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
+    redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
+)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.get("/", tags=["System"])
+@limiter.limit("5/minute") # Limite : 5 requêtes par minute sur cette route
+async def root(request: Request):
+    return {"message": "Silence is golden. Not Found..."}
+
+# Route de test (Health Check) pour s'assurer que le serveur tourne
+@app.get("/health", tags=["System"])
+@limiter.limit("10/minute") # Limite : 10 requêtes par minute sur cette route
+async def health_check(request: Request):
+    return {
+        "status": "online",
+        "environment": settings.ENVIRONMENT,
+        "project": settings.PROJECT_NAME,
+        "message": "Bienvenue dans GuardiHack P00l."
+    }
