@@ -6,7 +6,6 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = "development"
-    
     # Database
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str

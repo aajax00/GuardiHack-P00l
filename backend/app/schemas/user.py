@@ -7,7 +7,7 @@ class UserCreate(BaseModel):
     password: str = Field(..., min_length=8)
     pool_code: str
 
-# Ce qu'on attend pour se connecter (pseudo OU email)
+# Ce qu'on attend pour se connecter (username OU email)
 class UserLogin(BaseModel):
     login_identifier: str 
     password: str

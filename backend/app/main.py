@@ -2,14 +2,9 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.api.v1.endpoints import auth
-
-# Imports pour le Rate Limiting
 from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-
-# 1. Configuration du Limiter (basé sur l'IP du visiteur)
-limiter = Limiter(key_func=get_remote_address)
+from app.core.limiter import limiter 
 
 # Iswagger cacher en production
 app = FastAPI(
