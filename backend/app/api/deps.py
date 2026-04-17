@@ -50,3 +50,15 @@ async def get_current_user(
         
     # On laisse passer l'utilisateur !
     return user
+
+async def get_current_admin_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    # Le vigile classique a déjà validé le token et nous a donné le "current_user".
+    # Maintenant, on vérifie si la case "is_admin" est cochée.
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, # 403: Tu es identifié, mais tu n'as pas le droit d'entrer.
+            detail="Accès refusé. Vous n'avez pas les droits d'administration.",
+        )
+    return current_user
