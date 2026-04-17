@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
     POOL_CODE: str
     
+    SECRET_KEY: str = "054a624bfc520d01907c3f527ab1488612f13434db6929b60992f99658ae13de"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 jours
+    
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
