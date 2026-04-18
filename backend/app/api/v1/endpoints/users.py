@@ -2,12 +2,13 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func
+from uuid import UUID
 
 from app.models.user import User
 from app.models.challenge import Challenge
 from app.models.solve import Solve
 from app.models.badge import Badge, UserBadge
-from app.schemas.user import UserResponse
+from app.schemas.user import UserResponse, UserPublicRead
 from app.api.deps import get_current_user
 from app.core.limiter import limiter
 from app.core.database import get_db
@@ -30,6 +31,45 @@ async def read_users_me(
         select(Badge, UserBadge.earned_at)
         .join(UserBadge, Badge.id == UserBadge.badge_id)
         .where(UserBadge.user_id == current_user.id)
+    )
+    result_badges = await db.execute(query_badges)
+    
+    badges_list = []
+    for badge, earned_at in result_badges.all():
+        badges_list.append({
+            "badge": {
+                "id": badge.id,
+                "name": badge.name,
+                "description": badge.description,
+                "icon_url": badge.icon_url
+            },
+            "earned_at": earned_at
+        })
+        
+    user_data["badges"] = badges_list
+    return user_data
+
+@router.get("/{user_id}", response_model=UserPublicRead)
+async def get_public_profile(
+    user_id: UUID,
+    db: AsyncSession = Depends(get_db)
+):
+    # 1. On cherche l'utilisateur
+    query = select(User).where(User.id == user_id)
+    user = (await db.execute(query)).scalars().first()
+    
+    if not user:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+
+    user_data = user.__dict__.copy()
+    user_data["grade"] = get_grade(user.level)
+    
+    # 2. On récupère ses badges (comme pour la route /me)
+    query_badges = (
+        select(Badge, UserBadge.earned_at)
+        .join(UserBadge, Badge.id == UserBadge.badge_id)
+        .where(UserBadge.user_id == user_id)
     )
     result_badges = await db.execute(query_badges)
     

@@ -29,3 +29,15 @@ class UserResponse(BaseModel):
     badges: List[UserBadgeRead] = []
 
     model_config = ConfigDict(from_attributes=True)
+    
+class UserPublicRead(BaseModel):
+    id: UUID
+    username: str
+    avatar_url: str | None = None
+    bio: str | None = None
+    level: int
+    score: int
+    grade: str | None = None
+    badges: List[UserBadgeRead] = [] # On inclut les badges !
+
+    model_config = ConfigDict(from_attributes=True)
