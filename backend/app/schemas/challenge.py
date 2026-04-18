@@ -27,3 +27,6 @@ class ChallengeRead(ChallengeBase):
 # Ce que l'Admin voit (Full info)
 class ChallengeAdminRead(ChallengeRead):
     flag: str
+    
+class ChallengeSubmit(BaseModel):
+    flag: str
