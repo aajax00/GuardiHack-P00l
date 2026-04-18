@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import func
 from typing import List
 from uuid import UUID
 
@@ -10,6 +11,7 @@ from app.models.solve import Solve
 from app.schemas.challenge import ChallengeRead, ChallengeSubmit
 from app.api.deps import get_current_user
 from app.core.database import get_db
+from app.core.utils import calculate_level, get_challenge_rewards
 
 router = APIRouter()
 
@@ -53,17 +55,34 @@ async def submit_flag(
             detail="Flag incorrect"
         )
         
+    query_first_blood = select(func.count(Solve.id)).where(Solve.challenge_id == challenge.id)
+    result_fb = await db.execute(query_first_blood)
+    solve_count = result_fb.scalar()
+    
+    is_first_blood = (solve_count == 0)
+    xp_gained = get_challenge_rewards(challenge.value, is_first_blood)
+        
     new_solve = Solve(user_id=current_user.id, challenge_id=challenge.id)
     db.add(new_solve)
     
-    current_user.xp += challenge.value
+    old_level = current_user.level
+    current_user.xp += xp_gained
     current_user.score += challenge.value
+    current_user.level = calculate_level(current_user.xp)
+    
+    leveled_up = current_user.level > old_level
     db.add(current_user)
     
     await db.commit()
     
+    msg = "🩸 First Blood ! Flag Correcte, Bien joué !" if is_first_blood else "Flag Correcte et validé, Bien joué !"
+    
     return {
-        "message": "Flag Correcte et validé, Bien joué !",
-        "xp_gained": challenge.value,
-        "new_total_xp": current_user.xp
+        "message": msg,
+        "xp_gained": xp_gained,
+        "points_gained": challenge.value,
+        "new_total_xp": current_user.xp,
+        "new_level": current_user.level,
+        "leveled_up": leveled_up,
+        "first_blood": is_first_blood
     }

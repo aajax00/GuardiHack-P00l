@@ -20,6 +20,9 @@ class UserResponse(BaseModel):
     username: str
     email: EmailStr
     xp: int
+    score: int
+    level: int
+    grade: str | None = None
     is_active: bool
     is_admin: bool
 
