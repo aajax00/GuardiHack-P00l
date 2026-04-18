@@ -1,4 +1,6 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from uuid import UUID
+from typing import Optional
 
 # Ce qu'on attend de l'utilisateur pour s'inscrire
 class UserCreate(BaseModel):
@@ -14,12 +16,11 @@ class UserLogin(BaseModel):
 
 # Ce que l'API renvoie au Frontend (SANS le mot de passe !)
 class UserResponse(BaseModel):
-    id: int
+    id: UUID
     username: str
     email: EmailStr
     xp: int
     is_active: bool
     is_admin: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

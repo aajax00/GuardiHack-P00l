@@ -10,6 +10,8 @@ from app.core.database import get_db
 from app.models.user import User
 from app.schemas.token import TokenData
 
+from uuid import UUID
+
 # Le tokenUrl sert juste à dire à Swagger où aller chercher le token quand on clique sur "Authorize"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
@@ -26,17 +28,15 @@ async def get_current_user(
     )
     
     try:
-        # On essaie de décoder le token avec notre clé secrète
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        # On récupère l'ID de l'utilisateur (le "sub" qu'on a mis lors du login)
-        user_id: str = str(payload.get("sub"))
+        raw_user_id = payload.get("sub")
         
-        if user_id is None:
+        if raw_user_id is None:
             raise credentials_exception
             
-        token_data = TokenData(user_id=int(user_id))
+        token_data = TokenData(user_id=UUID(raw_user_id))
         
-    except InvalidTokenError:
+    except (InvalidTokenError, ValueError):
         # Si le token est expiré, malformé, ou signé avec une fausse clé -> Dehors !
         raise credentials_exception
 
