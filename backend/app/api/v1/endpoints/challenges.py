@@ -12,6 +12,7 @@ from app.schemas.challenge import ChallengeRead, ChallengeSubmit
 from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.core.utils import calculate_level, get_challenge_rewards
+from app.services.badge_service import check_and_award_badges
 
 router = APIRouter()
 
@@ -36,24 +37,15 @@ async def submit_flag(
     challenge = result_chal.scalars().first()
     
     if not challenge:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Challenge introuvable"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge introuvable")
         
     query_solve = select(Solve).where(Solve.user_id == current_user.id, Solve.challenge_id == challenge_id)
     result_solve = await db.execute(query_solve)
     if result_solve.scalars().first():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Vous avez déjà validé ce challenge"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Vous avez déjà validé ce challenge")
         
     if submission.flag != challenge.flag:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Flag incorrect"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Flag incorrect")
         
     query_first_blood = select(func.count(Solve.id)).where(Solve.challenge_id == challenge.id)
     result_fb = await db.execute(query_first_blood)
@@ -72,10 +64,14 @@ async def submit_flag(
     
     leveled_up = current_user.level > old_level
     db.add(current_user)
-    
     await db.commit()
     
+    new_badges = await check_and_award_badges(db, current_user, challenge, is_first_blood)
+    
     msg = "🩸 First Blood ! Flag Correcte, Bien joué !" if is_first_blood else "Flag Correcte et validé, Bien joué !"
+    
+    if new_badges:
+        msg += f"Nouveau badge débloqué : {', '.join(new_badges)}"
     
     return {
         "message": msg,
@@ -84,5 +80,6 @@ async def submit_flag(
         "new_total_xp": current_user.xp,
         "new_level": current_user.level,
         "leveled_up": leveled_up,
-        "first_blood": is_first_blood
+        "first_blood": is_first_blood,
+        "unlocked_badges": new_badges
     }

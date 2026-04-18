@@ -6,6 +6,7 @@ from sqlalchemy import func
 from app.models.user import User
 from app.models.challenge import Challenge
 from app.models.solve import Solve
+from app.models.badge import Badge, UserBadge
 from app.schemas.user import UserResponse
 from app.api.deps import get_current_user
 from app.core.limiter import limiter
@@ -19,10 +20,32 @@ router = APIRouter()
 @limiter.limit("20/minute")
 async def read_users_me(
     request: Request, 
-    current_user: User = Depends(get_current_user) # C'est ICI qu'on place le vigile !
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     user_data = current_user.__dict__.copy()
     user_data["grade"] = get_grade(current_user.level)
+    
+    query_badges = (
+        select(Badge, UserBadge.earned_at)
+        .join(UserBadge, Badge.id == UserBadge.badge_id)
+        .where(UserBadge.user_id == current_user.id)
+    )
+    result_badges = await db.execute(query_badges)
+    
+    badges_list = []
+    for badge, earned_at in result_badges.all():
+        badges_list.append({
+            "badge": {
+                "id": badge.id,
+                "name": badge.name,
+                "description": badge.description,
+                "icon_url": badge.icon_url
+            },
+            "earned_at": earned_at
+        })
+        
+    user_data["badges"] = badges_list
     return user_data
 
 @router.get("/scoreboard")

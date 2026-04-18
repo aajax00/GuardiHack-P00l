@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from uuid import UUID
-from typing import Optional
+from typing import List
+from app.schemas.badge import UserBadgeRead
 
 # Ce qu'on attend de l'utilisateur pour s'inscrire
 class UserCreate(BaseModel):
@@ -25,5 +26,6 @@ class UserResponse(BaseModel):
     grade: str | None = None
     is_active: bool
     is_admin: bool
+    badges: List[UserBadgeRead] = []
 
     model_config = ConfigDict(from_attributes=True)
