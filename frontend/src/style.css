@@ -1,0 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Orbitron:wght@500;700&family=Fira+Code&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* On laisse DaisyUI gérer les couleurs via base-100 et base-content */
+body {
+  @apply bg-base-100 text-base-content;
+  margin: 0;
+}
