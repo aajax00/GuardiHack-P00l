@@ -7,9 +7,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        cyber: ['Orbitron', 'sans-serif'],
+        cyber: ['"Press Start 2P"', 'cursive'],
         sans: ['Poppins', 'sans-serif'],
-        mono: ['Fira Code', 'monospace'],
+        mono: ['"Roboto Mono"', 'monospace'],
       },
       colors: {
         'ctf-dark': '#0B0E14',

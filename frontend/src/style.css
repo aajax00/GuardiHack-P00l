@@ -9,3 +9,41 @@ body {
   @apply bg-base-100 text-base-content;
   margin: 0;
 }
+
+/* Effet de crochets [ ] au survol */
+.nav-link {
+  @apply relative px-4 py-2 text-sm font-medium transition-all duration-200 flex items-center opacity-80;
+}
+
+.nav-link:hover, .router-link-exact-active {
+  @apply opacity-100 text-primary bg-primary/10 h-5 rounded-sm;
+}
+
+.nav-link::before, .nav-link::after {
+  @apply absolute opacity-0 transition-all duration-300 text-primary font-bold;
+}
+
+.nav-link::before {
+  content: '[';
+  left: 0;
+}
+
+.nav-link::after {
+  content: ']';
+  right: 0;
+}
+
+.nav-link:hover::before {
+  @apply opacity-100 left-[-2px];
+}
+
+.nav-link:hover::after {
+  @apply opacity-100 right-[-2px];
+}
+
+/* Style spécifique pour l'onglet actif */
+.router-link-exact-active::before, .router-link-exact-active::after {
+  @apply opacity-100;
+}
+.router-link-exact-active::before { left: -2px; }
+.router-link-exact-active::after { right: -2px; }
